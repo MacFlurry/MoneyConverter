@@ -11,7 +11,11 @@ test('package.json defines a local build script for app.bundle.js', async () => 
   const buildScript = await readFile(buildScriptPath, 'utf8');
 
   assert.equal(typeof pkg.scripts?.build, 'string');
+  assert.equal(typeof pkg.scripts?.['build:prod'], 'string');
   assert.match(pkg.scripts.build, /^node scripts\/build\.mjs$/);
+  assert.match(pkg.scripts['build:prod'], /^node scripts\/build\.mjs --minify --out-dir dist$/);
   assert.match(buildScript, /src\/js\/main\.js/);
   assert.match(buildScript, /src\/js\/app\.bundle\.js/);
+  assert.match(buildScript, /--out-dir/);
+  assert.match(buildScript, /--minify/);
 });

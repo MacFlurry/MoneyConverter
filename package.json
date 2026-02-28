@@ -1,11 +1,12 @@
 {
   "name": "money-converter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:watch": "npm run build -- --watch",
+    "build:prod": "node scripts/build.mjs --minify --out-dir dist",
     "test": "node --test"
   }
 }

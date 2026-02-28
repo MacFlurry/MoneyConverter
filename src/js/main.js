@@ -10,7 +10,8 @@ import {
     setStatus,
     setUpdatedAtLabel,
     clearOtherFields,
-    bindFieldEvents
+    bindFieldEvents,
+    setFieldValidity
 } from './ui.js';
 
 const fields = {
@@ -30,16 +31,24 @@ let isUpdating = false;
 function handleInput(sourceCurrency) {
     if (isUpdating) return;
 
+    setFieldValidity(fields[sourceCurrency], false);
+
     const raw = fields[sourceCurrency].value.trim();
     if (raw === '') {
         isUpdating = true;
         clearOtherFields(fields, sourceCurrency);
+        SUPPORTED_CURRENCIES.forEach((currency) => {
+            setFieldValidity(fields[currency], false);
+        });
         isUpdating = false;
         return;
     }
 
     const amount = parseLocaleNumber(raw);
-    if (Number.isNaN(amount)) return;
+    if (Number.isNaN(amount)) {
+        setFieldValidity(fields[sourceCurrency], true);
+        return;
+    }
 
     const usd = toUSD(amount, sourceCurrency, ratesPerUSD);
     const converted = fromUSD(usd, ratesPerUSD);
@@ -48,6 +57,7 @@ function handleInput(sourceCurrency) {
     SUPPORTED_CURRENCIES.forEach((currency) => {
         if (currency === sourceCurrency) return;
         fields[currency].value = formatNumber(converted[currency]);
+        setFieldValidity(fields[currency], false);
     });
     isUpdating = false;
 }

@@ -181,6 +181,12 @@ button:disabled {
     box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
 }
 
+.field input.invalid,
+.field input.invalid:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
 .hint {
     margin-top: 14px;
     color: var(--muted);

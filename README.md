@@ -26,6 +26,13 @@ Application web statique de conversion de devises (CDF, XAF, EUR, USD) avec taux
 
 - Lancer `npm test`.
 
+## Build
+
+- Generer le bundle navigateur: `npm run build`
+- Mode watch: `npm run build:watch`
+
+Le fichier `src/js/app.bundle.js` est genere depuis `src/js/main.js` via `scripts/build.mjs`.
+
 ## Evolution recommandees
 
 - Introduire un bundler (Vite) si l'application grossit.

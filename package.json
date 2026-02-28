@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:watch": "npm run build -- --watch",
     "test": "node --test"
   }
 }

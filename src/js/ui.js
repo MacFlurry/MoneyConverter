@@ -20,6 +20,17 @@ export function clearOtherFields(fields, sourceCurrency) {
     });
 }
 
+export function setFieldValidity(field, isInvalid) {
+    if (isInvalid) {
+        field.classList.add('invalid');
+        field.setAttribute('aria-invalid', 'true');
+        return;
+    }
+
+    field.classList.remove('invalid');
+    field.removeAttribute('aria-invalid');
+}
+
 export function bindFieldEvents(fields, onInput) {
     Object.keys(fields).forEach((currency) => {
         fields[currency].addEventListener('input', () => onInput(currency));

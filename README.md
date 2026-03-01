@@ -15,6 +15,8 @@ Application web statique de conversion de devises (CDF, XAF, EUR, USD) avec taux
 - `src/js/main.js` : orchestration modulaire (source)
 - `src/js/app.bundle.js` : script autonome charge par `convert.html` (compatibilite ouverture locale)
 - `scripts/build.mjs` : build JS et preparation d'artefact deployable
+- `_headers` : headers HTTP Netlify appliques en production
+- `netlify.toml` : configuration build/deploy Netlify
 - `tests/*.test.mjs` : tests TDD (logique + chargement HTML + securite/build)
 - `package.json` : scripts npm
 
@@ -39,6 +41,7 @@ Le fichier `src/js/app.bundle.js` est genere depuis `src/js/main.js` via `script
 Le build production genere un dossier `dist/` autonome:
 
 - `dist/convert.html`
+- `dist/_headers`
 - `dist/src/js/app.bundle.js` (minifie)
 - `dist/src/styles/`
 - `dist/src/fonts/`
@@ -78,6 +81,14 @@ Netlify (`_headers`):
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
+```
+
+Netlify (`netlify.toml`):
+
+```toml
+[build]
+command = "npm run build:prod"
+publish = "dist"
 ```
 
 Vercel (`vercel.json`):

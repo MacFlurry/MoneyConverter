@@ -22,12 +22,14 @@ test('build script creates deployable dist layout and minified bundle', async ()
   const minHtmlPath = path.join(minOutDir, 'convert.html');
   const minCssPath = path.join(minOutDir, 'src/styles/main.css');
   const minFontPath = path.join(minOutDir, 'src/fonts/Manrope-400.woff2');
+  const minHeadersPath = path.join(minOutDir, '_headers');
   const minBundlePath = path.join(minOutDir, 'src/js/app.bundle.js');
   const nonMinBundlePath = path.join(nonMinOutDir, 'src/js/app.bundle.js');
 
-  const [minHtml, minCss, minBundle, nonMinBundle, minBundleStat, nonMinBundleStat, fontStat] = await Promise.all([
+  const [minHtml, minCss, minHeaders, minBundle, nonMinBundle, minBundleStat, nonMinBundleStat, fontStat] = await Promise.all([
     readFile(minHtmlPath, 'utf8'),
     readFile(minCssPath, 'utf8'),
+    readFile(minHeadersPath, 'utf8'),
     readFile(minBundlePath, 'utf8'),
     readFile(nonMinBundlePath, 'utf8'),
     stat(minBundlePath),
@@ -37,6 +39,8 @@ test('build script creates deployable dist layout and minified bundle', async ()
 
   assert.match(minHtml, /<script\s+defer\s+src="src\/js\/app\.bundle\.js"><\/script>/);
   assert.match(minCss, /Manrope-400\.woff2/);
+  assert.match(minHeaders, /X-Content-Type-Options:\s*nosniff/);
+  assert.match(minHeaders, /X-Frame-Options:\s*DENY/);
   assert.equal(fontStat.isFile(), true);
 
   assert.ok(minBundleStat.size <= nonMinBundleStat.size);

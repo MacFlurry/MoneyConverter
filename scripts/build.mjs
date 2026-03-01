@@ -18,6 +18,7 @@ const moduleOrder = [
 
 const staticEntries = [
   { type: 'file', path: 'convert.html' },
+  { type: 'file', path: '_headers' },
   { type: 'dir', path: 'src/styles' },
   { type: 'dir', path: 'src/fonts' }
 ];

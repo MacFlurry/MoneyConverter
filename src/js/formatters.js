@@ -5,7 +5,11 @@ const numberFormatter = new Intl.NumberFormat('fr-FR', {
 
 export function parseLocaleNumber(text) {
     const normalized = text.replace(/\s/g, '').replace(',', '.');
-    const value = Number.parseFloat(normalized);
+    if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized)) {
+        return NaN;
+    }
+
+    const value = Number(normalized);
     return Number.isFinite(value) ? value : NaN;
 }
 

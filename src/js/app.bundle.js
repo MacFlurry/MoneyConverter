@@ -20,7 +20,11 @@ const numberFormatter = new Intl.NumberFormat('fr-FR', {
 
 function parseLocaleNumber(text) {
     const normalized = text.replace(/\s/g, '').replace(',', '.');
-    const value = Number.parseFloat(normalized);
+    if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized)) {
+        return NaN;
+    }
+
+    const value = Number(normalized);
     return Number.isFinite(value) ? value : NaN;
 }
 
@@ -137,6 +141,93 @@ function bindFieldEvents(fields, onInput) {
     });
 }
 
+// src/js/app-controller.js
+function createMoneyConverterApp({
+    fields,
+    statusEl,
+    updatedAtEl,
+    refreshBtn,
+    fetchRates,
+    now = () => new Date(),
+    setTimer = setInterval
+}) {
+    let ratesPerUSD = { ...FALLBACK_RATES_PER_USD };
+    let isUpdating = false;
+    let activeCurrency = null;
+
+    function handleInput(sourceCurrency) {
+        if (isUpdating) return;
+
+        setFieldValidity(fields[sourceCurrency], false);
+
+        const raw = fields[sourceCurrency].value.trim();
+        if (raw === '') {
+            activeCurrency = null;
+            isUpdating = true;
+            clearOtherFields(fields, sourceCurrency);
+            SUPPORTED_CURRENCIES.forEach((currency) => {
+                setFieldValidity(fields[currency], false);
+            });
+            isUpdating = false;
+            return;
+        }
+
+        activeCurrency = sourceCurrency;
+        const amount = parseLocaleNumber(raw);
+        if (Number.isNaN(amount)) {
+            setFieldValidity(fields[sourceCurrency], true);
+            return;
+        }
+
+        const usd = toUSD(amount, sourceCurrency, ratesPerUSD);
+        const converted = fromUSD(usd, ratesPerUSD);
+
+        isUpdating = true;
+        SUPPORTED_CURRENCIES.forEach((currency) => {
+            if (currency === sourceCurrency) return;
+            fields[currency].value = formatNumber(converted[currency]);
+            setFieldValidity(fields[currency], false);
+        });
+        isUpdating = false;
+    }
+
+    async function refreshRates() {
+        setStatus(statusEl, 'loading', 'Mise a jour des taux...');
+        refreshBtn.disabled = true;
+
+        const result = await fetchRates();
+        ratesPerUSD = result.rates;
+
+        if (result.ok) {
+            setStatus(statusEl, 'ok', 'Taux live actifs');
+            setUpdatedAtLabel(updatedAtEl, now(), false);
+        } else {
+            setStatus(statusEl, 'error', 'API indisponible: taux de secours actifs');
+            setUpdatedAtLabel(updatedAtEl, now(), true);
+            console.error('Impossible de recuperer les taux live:', result.error);
+        }
+
+        refreshBtn.disabled = false;
+
+        if (activeCurrency) {
+            handleInput(activeCurrency);
+        }
+    }
+
+    function start() {
+        bindFieldEvents(fields, handleInput);
+        refreshBtn.addEventListener('click', refreshRates);
+        refreshRates();
+        setTimer(refreshRates, REFRESH_INTERVAL_MS);
+    }
+
+    return {
+        handleInput,
+        refreshRates,
+        start
+    };
+}
+
 // src/js/main.js
 const fields = {
     CDF: document.getElementById('cdf'),
@@ -149,66 +240,12 @@ const statusEl = document.getElementById('status');
 const updatedAtEl = document.getElementById('updatedAt');
 const refreshBtn = document.getElementById('refreshBtn');
 
-let ratesPerUSD = { ...FALLBACK_RATES_PER_USD };
-let isUpdating = false;
-
-function handleInput(sourceCurrency) {
-    if (isUpdating) return;
-
-    setFieldValidity(fields[sourceCurrency], false);
-
-    const raw = fields[sourceCurrency].value.trim();
-    if (raw === '') {
-        isUpdating = true;
-        clearOtherFields(fields, sourceCurrency);
-        SUPPORTED_CURRENCIES.forEach((currency) => {
-            setFieldValidity(fields[currency], false);
-        });
-        isUpdating = false;
-        return;
-    }
-
-    const amount = parseLocaleNumber(raw);
-    if (Number.isNaN(amount)) {
-        setFieldValidity(fields[sourceCurrency], true);
-        return;
-    }
-
-    const usd = toUSD(amount, sourceCurrency, ratesPerUSD);
-    const converted = fromUSD(usd, ratesPerUSD);
-
-    isUpdating = true;
-    SUPPORTED_CURRENCIES.forEach((currency) => {
-        if (currency === sourceCurrency) return;
-        fields[currency].value = formatNumber(converted[currency]);
-        setFieldValidity(fields[currency], false);
-    });
-    isUpdating = false;
-}
-
-async function refreshRates() {
-    setStatus(statusEl, 'loading', 'Mise a jour des taux...');
-    refreshBtn.disabled = true;
-
-    const result = await fetchRatesPerUSD();
-    ratesPerUSD = result.rates;
-
-    if (result.ok) {
-        setStatus(statusEl, 'ok', 'Taux live actifs');
-        setUpdatedAtLabel(updatedAtEl, new Date(), false);
-    } else {
-        setStatus(statusEl, 'error', 'API indisponible: taux de secours actifs');
-        setUpdatedAtLabel(updatedAtEl, new Date(), true);
-        console.error('Impossible de recuperer les taux live:', result.error);
-    }
-
-    refreshBtn.disabled = false;
-}
-
-bindFieldEvents(fields, handleInput);
-refreshBtn.addEventListener('click', refreshRates);
-
-refreshRates();
-setInterval(refreshRates, REFRESH_INTERVAL_MS);
+createMoneyConverterApp({
+    fields,
+    statusEl,
+    updatedAtEl,
+    refreshBtn,
+    fetchRates: fetchRatesPerUSD
+}).start();
 
 })();

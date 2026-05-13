@@ -13,6 +13,7 @@ const moduleOrder = [
   'src/js/converter.js',
   'src/js/rates-service.js',
   'src/js/ui.js',
+  'src/js/app-controller.js',
   'src/js/main.js'
 ];
 

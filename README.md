@@ -12,7 +12,8 @@ Application web statique de conversion de devises (CDF, XAF, EUR, USD) avec taux
 - `src/js/converter.js` : logique pure de conversion
 - `src/js/rates-service.js` : recuperation des taux avec fallback
 - `src/js/ui.js` : helpers UI (statut, label date, events)
-- `src/js/main.js` : orchestration modulaire (source)
+- `src/js/app-controller.js` : controleur applicatif testable (saisie, refresh, recalcul)
+- `src/js/main.js` : wiring DOM navigateur
 - `src/js/app.bundle.js` : script autonome charge par `convert.html` (compatibilite ouverture locale)
 - `scripts/build.mjs` : build JS et preparation d'artefact deployable
 - `_headers` : headers HTTP Netlify appliques en production
@@ -25,6 +26,8 @@ Application web statique de conversion de devises (CDF, XAF, EUR, USD) avec taux
 1. Ouvrir `convert.html` dans un navigateur moderne.
 2. Entrer un montant dans une devise pour obtenir la conversion des autres.
 3. Cliquer sur `Rafraichir les taux` pour forcer une mise a jour.
+
+Quand les taux sont rafraichis, les montants affiches sont recalcules depuis le champ actif afin de rester coherents avec les taux courants.
 
 ## Tests
 
@@ -71,7 +74,7 @@ Recommandes cote serveur/CDN:
 
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY` (legacy)
-- CSP avec `frame-ancestors 'none'` (prioritaire contre clickjacking)
+- `Content-Security-Policy` restrictive avec `frame-ancestors 'none'` (prioritaire contre clickjacking)
 
 ### Exemples de configuration
 
@@ -81,6 +84,7 @@ Netlify (`_headers`):
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://open.er-api.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none';
 ```
 
 Netlify (`netlify.toml`):
@@ -100,7 +104,8 @@ Vercel (`vercel.json`):
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" }
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://open.er-api.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none';" }
       ]
     }
   ]
@@ -112,4 +117,5 @@ Nginx:
 ```nginx
 add_header X-Content-Type-Options "nosniff" always;
 add_header X-Frame-Options "DENY" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://open.er-api.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none';" always;
 ```

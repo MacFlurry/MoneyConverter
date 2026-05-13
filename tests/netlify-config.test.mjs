@@ -19,4 +19,10 @@ test('_headers defines baseline security headers', async () => {
   assert.match(headers, /^\/\*\s*$/m);
   assert.match(headers, /X-Content-Type-Options:\s*nosniff/);
   assert.match(headers, /X-Frame-Options:\s*DENY/);
+  assert.match(headers, /Content-Security-Policy:\s*default-src 'self'/);
+  assert.match(headers, /connect-src 'self' https:\/\/open\.er-api\.com/);
+  assert.match(headers, /object-src 'none'/);
+  assert.match(headers, /base-uri 'none'/);
+  assert.match(headers, /frame-ancestors 'none'/);
+  assert.match(headers, /form-action 'none'/);
 });
